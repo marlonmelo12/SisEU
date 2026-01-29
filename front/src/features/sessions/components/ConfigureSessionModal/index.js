@@ -663,11 +663,11 @@ const ConfigureSessionModal = ({ isOpen, onClose, eventoParaEditar = null }) => 
 
             <Button
               type="button"
-              variant="outline"
+              variant="primary"
               onClick={adicionarApresentacao}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white border-0"
+              className="w-full bg-purple-600 hover:bg-purple-700 border-purple-600 flex items-center justify-center"
             >
-              <FiPlus className="mr-2" />
+              <FiPlus className="mr-2" size={18} />
               Adicionar Apresentação
             </Button>
           </div>

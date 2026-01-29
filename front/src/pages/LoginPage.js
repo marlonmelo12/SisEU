@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
-import { FiUser, FiLock } from 'react-icons/fi';
+import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { formatCPF, unformatCPF, isValidCPF } from '../utils/formatters';
 import { VALIDATION } from '../constants';
 
@@ -14,6 +14,7 @@ import { VALIDATION } from '../constants';
 const LoginPage = () => {
   const [cpf, setCpf] = useState('');
   const [senha, setSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const { login, loading, error } = useAuth();
 
@@ -110,16 +111,30 @@ const LoginPage = () => {
               maxLength={14}
             />
 
-            <Input
-              label="Senha"
-              type="password"
-              name="senha"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="Digite sua senha"
-              required
-              icon={<FiLock className="text-gray-400" size={18} />}
-            />
+            <div className="relative">
+              <Input
+                label="Senha"
+                type={showPassword ? "text" : "password"}
+                name="senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Digite sua senha"
+                required
+                icon={<FiLock className="text-gray-400" size={18} />}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? (
+                  <FiEyeOff size={20} />
+                ) : (
+                  <FiEye size={20} />
+                )}
+              </button>
+            </div>
 
             <Button
               type="submit"

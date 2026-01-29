@@ -51,56 +51,31 @@ const ConfigureSessionModal = ({ isOpen, onClose, eventoParaEditar = null }) => 
     if (eventoParaEditar && isOpen) {
       console.log('[MODAL] Carregando evento para editar:', eventoParaEditar);
       
-      // Função para converter nome do campus em número
-      const getCampusNumber = (campusValue) => {
-        if (typeof campusValue === 'number') return campusValue;
-        if (typeof campusValue === 'string') {
-          const campusUpper = campusValue.toUpperCase();
-          if (campusUpper.includes('PICI')) return CAMPUS.PICI;
-          if (campusUpper.includes('BENFICA')) return CAMPUS.BENFICA;
-          if (campusUpper.includes('PORANGABU')) return CAMPUS.PORANGABUSSU;
-          // Se não encontrar, tenta como Fortaleza -> Pici
-          if (campusUpper.includes('FORTALEZA')) return CAMPUS.PICI;
-        }
-        return 0;
-      };
+      // 1. Tratamento do Local (De String para Objeto)
+      let localObj = { campus: 0, departamento: '', bloco: '', sala: '' };
       
-      // Função para converter nome do tipo evento em número
-      const getTipoEventoNumber = (tipoValue) => {
-        if (typeof tipoValue === 'number') return tipoValue;
-        if (typeof tipoValue === 'string') {
-          const tipoUpper = tipoValue.toUpperCase();
-          if (tipoUpper.includes('SEMIN')) return TIPO_EVENTO.SEMINARIO;
-          if (tipoUpper.includes('WORK')) return TIPO_EVENTO.WORKSHOP;
-          if (tipoUpper.includes('CONFER')) return TIPO_EVENTO.CONFERENCIA;
-          if (tipoUpper.includes('PALEST')) return TIPO_EVENTO.PALESTRA;
-        }
-        return 0;
-      };
-      
-      // Extrai o local (pode vir como objeto ou string)
-      let localObj = {
-        campus: 0,
-        departamento: '',
-        bloco: '',
-        sala: '',
-      };
-      
-      if (eventoParaEditar.local && typeof eventoParaEditar.local === 'object') {
+      if (typeof eventoParaEditar.local === 'string') {
+        const partes = eventoParaEditar.local.split(',').map(p => p.trim());
+        // Inverte a lógica: o log indica [sala, bloco, departamento, campus]
         localObj = {
-          campus: getCampusNumber(eventoParaEditar.local.campus),
+          sala: partes[0] || '',
+          bloco: partes[1] || '',
+          departamento: partes[2] || '',
+          campus: eventoParaEditar.nomeCampus?.toUpperCase().includes('PICI') ? CAMPUS.PICI : 0
+        };
+      } else if (eventoParaEditar.local && typeof eventoParaEditar.local === 'object') {
+        localObj = {
+          campus: eventoParaEditar.local.campus || 0,
           departamento: eventoParaEditar.local.departamento || '',
           bloco: eventoParaEditar.local.bloco || '',
           sala: eventoParaEditar.local.sala || '',
         };
       }
       
-      // Formata CPFs de avaliadores - backend retorna array de strings (CPFs)
-      const avaliadores = Array.isArray(eventoParaEditar.avaliadores) 
-        ? eventoParaEditar.avaliadores 
-        : [];
+      // 2. Avaliadores (Usa professoresAvaliadores conforme o log)
+      const avaliadores = eventoParaEditar.professoresAvaliadores || eventoParaEditar.avaliadores || [];
       
-      // Formata apresentações - backend retorna objetos com autor e orientador completos
+      // 3. Apresentações
       const apresentacoes = Array.isArray(eventoParaEditar.apresentacoes)
         ? eventoParaEditar.apresentacoes.map(ap => ({
             id: ap.id || 0,
@@ -112,49 +87,24 @@ const ConfigureSessionModal = ({ isOpen, onClose, eventoParaEditar = null }) => 
           }))
         : [];
       
-      // Extrai data - dataDateTime é a data de início em formato ISO
-      let dataInicioFormatada = '';
-      let dataFimFormatada = '';
-      
-      // Data de início: usa dataDateTime que está em formato ISO
-      if (eventoParaEditar.dataDateTime) {
-        dataInicioFormatada = formatarDataParaInput(eventoParaEditar.dataDateTime);
-      }
-      
-      // Data fim: precisa reconstruir usando dataFim.dataPorExtenso e dataFim.hora
-      if (eventoParaEditar.dataFim && eventoParaEditar.dataFim.hora && dataInicioFormatada) {
-        // Pega a data de início e altera apenas a hora para a hora de fim
-        const dataInicio = new Date(dataInicioFormatada);
-        const [horaFim, minutoFim] = eventoParaEditar.dataFim.hora.split(':');
-        
-        // Se a hora de fim for menor que hora de início, assume que é no dia seguinte
-        const horaInicio = dataInicio.getHours();
-        if (parseInt(horaFim) < horaInicio) {
-          dataInicio.setDate(dataInicio.getDate() + 1);
-        }
-        
-        dataInicio.setHours(parseInt(horaFim), parseInt(minutoFim), 0);
-        dataFimFormatada = dataInicio.toISOString().slice(0, 16);
-      } else if (dataInicioFormatada) {
-        // Fallback: adiciona 2 horas
-        const dataInicio = new Date(dataInicioFormatada);
-        dataInicio.setHours(dataInicio.getHours() + 2);
-        dataFimFormatada = dataInicio.toISOString().slice(0, 16);
-      }
-      
-      console.log('[MODAL] Local extraído:', localObj);
-      console.log('[MODAL] Avaliadores extraídos:', avaliadores);
-      console.log('[MODAL] Apresentações extraídas:', apresentacoes);
-      console.log('[MODAL] Datas formatadas:', { dataInicioFormatada, dataFimFormatada });
+      // 4. Formatação de Datas (Usa dataInicio e dataFim direto do log)
+      const formatarISO = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
+      };
+
+      const dataInicioFormatada = formatarISO(eventoParaEditar.dataInicio);
+      const dataFimFormatada = formatarISO(eventoParaEditar.dataFim);
       
       setFormData({
         titulo: eventoParaEditar.titulo || '',
         dataInicio: dataInicioFormatada,
         dataFim: dataFimFormatada,
         local: localObj,
-        eTipoEvento: getTipoEventoNumber(eventoParaEditar.eTipoEvento || eventoParaEditar.eventType),
+        eTipoEvento: eventoParaEditar.eventType || 1, // Log mostra eventType: 1
         cpfsAvaliadores: avaliadores,
-        imgUrl: eventoParaEditar.imgUrl || eventoParaEditar.imagemUrl || '',
+        imgUrl: eventoParaEditar.imagemUrl || eventoParaEditar.imgUrl || '',
         codigoUnico: eventoParaEditar.codigoUnico || '',
         apresentacoes: apresentacoes,
       });

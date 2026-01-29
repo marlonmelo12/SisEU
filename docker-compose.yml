@@ -12,7 +12,7 @@ services:
       MYSQL_USER: Faca
       MYSQL_PASSWORD: Gol050219581
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

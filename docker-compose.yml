@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Banco de dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: siseus-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: siseus
+      MYSQL_USER: Faca
+      MYSQL_PASSWORD: Gol050219581
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - siseus-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend API (.NET)
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: siseus-api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=siseus;user=Faca;password=Gol050219581
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - siseus-network
+
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: siseus-front
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - siseus-network
+
+networks:
+  siseus-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

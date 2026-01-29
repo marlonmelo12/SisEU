@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@layer base {
+  * {
+    @apply m-0 p-0 outline-none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    @apply transition-colors duration-300 h-screen box-border;
+  }
+  
+  body.light {
+    @apply bg-gray-50 text-gray-900;
+  }
+  
+  body.dark {
+    @apply bg-[#060010] text-white;
+  }
+}
+
+@layer components {
+  .modal-overlay.show {
+    @apply fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[999];
+  }
+
+  .modal-overlay.show .modal-content {
+    @apply scale-100 opacity-100;
+  }
+
+  .x-icon {
+    @apply absolute top-2.5 right-2.5 cursor-pointer z-[2] bg-white rounded-full;
+  }
+}

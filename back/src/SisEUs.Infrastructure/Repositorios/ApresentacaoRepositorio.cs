@@ -1,0 +1,45 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SisEUs.Domain.ContextoDeEvento.Entidades;
+using SisEUs.Domain.ContextoDeEvento.Interfaces;
+
+namespace SisEUs.Infrastructure.Repositorios
+{
+    public class ApresentacaoRepositorio(AppDbContext context) : IApresentacaoRepositorio
+    {
+        public async Task AdicionarAsync(Apresentacao apresentacao, CancellationToken cancellationToken = default)
+        {
+            await context.Apresentacoes.AddAsync(apresentacao, cancellationToken);
+        }
+
+        public async Task<Apresentacao?> ObterPorIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await context.Apresentacoes.FindAsync([id], cancellationToken);
+        }
+
+        public async Task<IEnumerable<Apresentacao>> ObterPorEventoIdAsync(int eventoId, CancellationToken cancellationToken = default)
+        {
+            return await context.Apresentacoes
+                .AsNoTracking()
+                .Where(a => a.EventoId == eventoId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Apresentacao>> ObterPorAutorIdAsync(int autorId, CancellationToken cancellationToken = default)
+        {
+            return await context.Apresentacoes
+                .AsNoTracking()
+                .Include(a => a.Evento)
+                .Where(a => a.AutorId == autorId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public void Remover(Apresentacao apresentacao)
+        {
+            context.Apresentacoes.Remove(apresentacao);
+        }
+
+        public async Task AdicionarAvaliacaoAsync(Avaliacao avaliacao, CancellationToken cancellationToken = default)
+        {
+            await context.Avaliacoes.AddAsync(avaliacao, cancellationToken);
+        }    }
+}

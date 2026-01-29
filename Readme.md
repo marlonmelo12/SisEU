@@ -34,11 +34,14 @@ Centraliza a criação de sessões e a geração de relatórios consolidados. Es
   
 ### Testes
 - qase.io
-- Documento de Testes
+- Documento de Testes [Link](https://docs.google.com/document/d/1Nz_5KLoDvppHalcz9GV0edcVHRbZAxQFMadGa4T7zC4/edit?usp=sharing)
   
 ### Conteinerização 
 - Docker e Docker Compose
 
+### Documentação
+- [Link](https://docs.google.com/document/d/12ihMiR1AIXmyP4s7MYGpsopxfrD53t6teptY3b20mzk/edit?usp=sharing)
+  
 # Instruções de Instalação e Execução
 
 1. Certifique-se de ter o Docker instalado em sua máquina.
@@ -88,6 +91,21 @@ front/seu/src
 ├── pages/          # As telas da aplicação 
 └── servicee/       # Chamadas aos endpoints da API
 ```
+
+# Integração com as Disciplinas
+
+## Auditoria e Segurança de Sistemas de Informação
+
+- Uso de geolocalização como prova de presença e log de auditoria, impedindo fraudes e garantindo a autenticidade da frequência.
+
+- A herança na classe Usuário isola permissões, garantindo que cada ator (Avaliador, Estudante, Admin) acesse apenas suas funções específicas.
+
+## Pesquisa Operacional 
+
+- Conversão dos baremas do Edital EU2025 em dados quantificáveis e automação de médias para auxílio na premiação acadêmica.
+
+- Pode aplicar PO para determinar o raio ideal de check-in com base na densidade de usuários e na precisão do sinal GPS no local do evento, minimizando falsos negativos.
+
 # Equipe
 Este projeto foi realizado como atividade para a disciplinha "Projeto Integrador IV", orientado pelo professor Bruno Riccelli. Alunos envolvidos:
 - Gabriel Correia Melo

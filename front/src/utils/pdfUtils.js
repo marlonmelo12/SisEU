@@ -1,144 +1,120 @@
 // src/utils/pdfUtils.js
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Utilitário para exportação da Lista de Participantes de uma Sessão em PDF.
- * Layout direto e limpo em PRETO E BRANCO (sem campo de assinatura e sem label de documento oficial).
+ * Utiliza jsPDF e jspdf-autotable para download direto sem depender de pop-up do navegador.
  */
 export const exportarListaInscritosPDF = (sessao, participantes = []) => {
   const tituloSessao = sessao?.titulo || 'Sessão SisEU';
-  const dataSessao = sessao?.data ? new Date(sessao.data).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+  const dataSessao = sessao?.data 
+    ? new Date(sessao.data).toLocaleDateString('pt-BR') 
+    : new Date().toLocaleDateString('pt-BR');
   const localSessao = typeof sessao?.local === 'object'
-    ? `${sessao.local.sala || ''}, ${sessao.local.bloco || ''} - ${sessao.local.departamento || ''}`
+    ? [sessao.local.sala, sessao.local.bloco, sessao.local.departamento].filter(Boolean).join(', ')
     : sessao?.local || 'Local não especificado';
 
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    alert('Por favor, permita pop-ups para gerar o relatório PDF.');
-    return;
-  }
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
 
-  const linhasTabela = participantes.length > 0 ? participantes.map((p, index) => `
-    <tr>
-      <td style="text-align: center; font-weight: bold;">${index + 1}</td>
-      <td>${p.nome || 'Participante'}</td>
-      <td style="font-family: monospace;">${p.cpf || '-'}</td>
-      <td style="text-align: center;">${p.horaCheckin || '-'}</td>
-      <td style="text-align: center;">${p.horaCheckout || '-'}</td>
-    </tr>
-  `).join('') : `
-    <tr>
-      <td colspan="5" style="text-align: center; padding: 20px;">
-        Nenhum participante com presença registrada nesta sessão até o momento.
-      </td>
-    </tr>
-  `;
+  // Cabeçalho
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SisEU - Relatorio de Presenca', 14, 15);
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8">
-      <title>Lista de Participantes - ${tituloSessao}</title>
-      <style>
-        @page {
-          size: A4;
-          margin: 15mm;
-        }
-        body {
-          font-family: Arial, Helvetica, sans-serif;
-          color: #000000;
-          background: #FFFFFF;
-          margin: 0;
-          padding: 10px;
-        }
-        .header {
-          border-bottom: 2px solid #000000;
-          padding-bottom: 10px;
-          margin-bottom: 15px;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-        }
-        .header h1 {
-          margin: 0;
-          font-size: 18px;
-          color: #000000;
-          text-transform: uppercase;
-        }
-        .meta-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          border: 1px solid #000000;
-          padding: 10px;
-          margin-bottom: 15px;
-          font-size: 11px;
-        }
-        .meta-item strong {
-          color: #000000;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 11px;
-          margin-top: 5px;
-        }
-        th, td {
-          border: 1px solid #000000;
-          padding: 7px 8px;
-          text-align: left;
-          color: #000000;
-        }
-        th {
-          background-color: #F0F0F0;
-          color: #000000;
-          font-weight: bold;
-          text-transform: uppercase;
-          font-size: 10px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div>
-          <h1>SisEU — Relatório de Presença</h1>
-        </div>
-        <div style="text-align: right; font-size: 10px; color: #000000;">
-          Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}
-        </div>
-      </div>
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  const dataGeracao = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`;
+  doc.text(dataGeracao, 200 - doc.getTextWidth(dataGeracao), 15);
 
-      <div class="meta-grid">
-        <div class="meta-item"><strong>Sessão:</strong> ${tituloSessao}</div>
-        <div class="meta-item"><strong>Data do Evento:</strong> ${dataSessao}</div>
-        <div class="meta-item"><strong>Local:</strong> ${localSessao}</div>
-        <div class="meta-item"><strong>Total de Participantes:</strong> ${participantes.length}</div>
-      </div>
+  // Linha divisória
+  doc.setLineWidth(0.5);
+  doc.line(14, 18, 196, 18);
 
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 30px; text-align: center;">#</th>
-            <th>Nome do Participante</th>
-            <th style="width: 120px;">CPF</th>
-            <th style="width: 110px; text-align: center;">Horário Check-in</th>
-            <th style="width: 110px; text-align: center;">Horário Check-out</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${linhasTabela}
-        </tbody>
-      </table>
+  // Metadados da Sessão (Card simples)
+  doc.setFillColor(245, 245, 245);
+  doc.rect(14, 22, 182, 20, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(14, 22, 182, 20, 'S');
 
-      <script>
-        window.onload = function() {
-          window.print();
-        };
-      </script>
-    </body>
-    </html>
-  `;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Sessao:`, 17, 28);
+  doc.setFont('helvetica', 'normal');
+  const tituloTruncado = tituloSessao.length > 50 ? `${tituloSessao.substring(0, 50)}...` : tituloSessao;
+  doc.text(tituloTruncado, 32, 28);
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Data:`, 17, 36);
+  doc.setFont('helvetica', 'normal');
+  doc.text(dataSessao, 28, 36);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Local:`, 75, 36);
+  doc.setFont('helvetica', 'normal');
+  doc.text(localSessao, 87, 36);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total Inscritos:`, 150, 36);
+  doc.setFont('helvetica', 'normal');
+  doc.text(String(participantes.length), 176, 36);
+
+  // Tabela de participantes
+  const colunas = [
+    { header: '#', dataKey: 'index' },
+    { header: 'Nome do Participante', dataKey: 'nome' },
+    { header: 'CPF', dataKey: 'cpf' },
+    { header: 'Horario Check-in', dataKey: 'horaCheckin' },
+    { header: 'Horario Check-out', dataKey: 'horaCheckout' },
+  ];
+
+  const linhas = participantes.length > 0
+    ? participantes.map((p, idx) => ({
+        index: idx + 1,
+        nome: p.nome || 'Participante',
+        cpf: p.cpf || '-',
+        horaCheckin: p.horaCheckin || '-',
+        horaCheckout: p.horaCheckout || '-',
+      }))
+    : [{ index: '-', nome: 'Nenhum participante com presenca registrada nesta sessao.', cpf: '-', horaCheckin: '-', horaCheckout: '-' }];
+
+  autoTable(doc, {
+    startY: 47,
+    head: [colunas.map(c => c.header)],
+    body: linhas.map(l => [l.index, l.nome, l.cpf, l.horaCheckin, l.horaCheckout]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'left',
+    },
+    styles: {
+      fontSize: 8,
+      textColor: [30, 30, 30],
+      cellPadding: 2.5,
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 10 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 35 },
+      3: { halign: 'center', cellWidth: 32 },
+      4: { halign: 'center', cellWidth: 32 },
+    },
+    didDrawPage: (data) => {
+      // Rodapé com paginação
+      const str = `Pagina ${doc.internal.getNumberOfPages()}`;
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(str, 196 - doc.getTextWidth(str), 290);
+    },
+  });
+
+  const nomeArquivo = `Relatorio_Presenca_Sessao_${sessao?.id || 'SisEU'}.pdf`;
+  doc.save(nomeArquivo);
 };

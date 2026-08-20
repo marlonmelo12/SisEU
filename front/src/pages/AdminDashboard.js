@@ -10,12 +10,11 @@ import SessionQRCodeModal from '../components/sessions/SessionQRCodeModal';
 import eventoService from '../services/eventoService';
 import sessaoService from '../services/sessaoService';
 import relatorioService from '../services/relatorioService';
-import checkinService from '../services/checkinService';
 import { useSessoes } from '../hooks/useSessoes';
 import { useRelatorios } from '../hooks/useRelatorios';
 import { useToast } from '../hooks/useToast';
 import { convertPresencasToCSV, downloadCSVFile } from '../utils/csvUtils';
-import { FiPlus, FiDownload, FiUpload, FiFileText, FiKey, FiCopy, FiCheck, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { FiPlus, FiDownload, FiUpload, FiFileText, FiCheckCircle, FiClock } from 'react-icons/fi';
 
 /**
  * Dashboard Administrativo (RF006)
@@ -35,9 +34,6 @@ const AdminDashboard = () => {
   const [eventoParaEditar, setEventoParaEditar] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventoParaExcluir, setEventoParaExcluir] = useState(null);
-  const [pinGerado, setPinGerado] = useState(null);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [copiado, setCopiado] = useState(false);
   const [sessaoParaQrCode, setSessaoParaQrCode] = useState(null);
   const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 
@@ -119,41 +115,6 @@ const AdminDashboard = () => {
     setShowAlert(true);
   };
 
-  const handleGerarPin = async () => {
-    try {
-      setAlertData({ type: 'info', message: 'Gerando novo PIN...' });
-      setShowAlert(true);
-
-      const resultado = await checkinService.gerarPin({});
-      
-      console.log('[ADMIN] PIN gerado:', resultado);
-      
-      setPinGerado(resultado);
-      setShowPinModal(true);
-      setCopiado(false);
-      
-      setAlertData({ 
-        type: 'success', 
-        message: 'PIN gerado com sucesso!' 
-      });
-    } catch (error) {
-      console.error('[ADMIN] Erro ao gerar PIN:', error);
-      setAlertData({ 
-        type: 'error', 
-        message: error.message || 'Erro ao gerar PIN' 
-      });
-    }
-    setShowAlert(true);
-  };
-
-  const handleCopiarPin = () => {
-    if (pinGerado?.pin) {
-      navigator.clipboard.writeText(pinGerado.pin);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    }
-  };
-
   const handleRelatorios = async () => {
     try {
       setAlertData({ type: 'info', message: 'Gerando relatório de presenças...' });
@@ -201,7 +162,7 @@ const AdminDashboard = () => {
         </h1>
 
         {/* Botões de ação coloridos e totalmente responsivos */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
           <Button
             variant="primary"
             onClick={handleAddSession}
@@ -236,15 +197,6 @@ const AdminDashboard = () => {
           >
             <FiFileText size={18} />
             <span className="text-xs sm:text-sm font-semibold">Relatórios</span>
-          </Button>
-
-          <Button
-            variant="info"
-            onClick={handleGerarPin}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white col-span-2 sm:col-span-1"
-          >
-            <FiKey size={18} />
-            <span className="text-xs sm:text-sm font-semibold">Gerar PIN</span>
           </Button>
         </div>
       </div>
@@ -406,55 +358,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Modal de Exibição do PIN */}
-      {showPinModal && pinGerado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              PIN Gerado com Sucesso!
-            </h3>
-            
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 mb-4 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                PIN de Check-in
-              </p>
-              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-4 tracking-wider">
-                {pinGerado.pin}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                ID: {pinGerado.id} | Gerado em: {new Date(pinGerado.dataGeracao).toLocaleString('pt-BR')}
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="primary"
-                onClick={handleCopiarPin}
-                className="flex-1 flex items-center justify-center gap-2"
-              >
-                {copiado ? (
-                  <>
-                    <FiCheck size={20} />
-                    <span>Copiado!</span>
-                  </>
-                ) : (
-                  <>
-                    <FiCopy size={20} />
-                    <span>Copiar PIN</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowPinModal(false)}
-                className="flex-1"
-              >
-                Fechar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 };

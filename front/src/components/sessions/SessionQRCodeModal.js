@@ -8,7 +8,9 @@ import { useToast } from '../../hooks/useToast';
 
 /**
  * Modal para exibição do QR Code e PIN da Sessão (Administrador)
- * Permite alternar entre Check-in (Entrada) e Check-out (Saída)
+ * - Alternância entre Check-in (Entrada) e Check-out (Saída)
+ * - Botão Modo Projeção posicionado no rodapé à esquerda
+ * - Layout refinado e limpo
  */
 const SessionQRCodeModal = ({ isOpen, onClose, sessao }) => {
   const [tipoPresenca, setTipoPresenca] = useState('checkin'); // 'checkin' ou 'checkout'
@@ -97,95 +99,76 @@ const SessionQRCodeModal = ({ isOpen, onClose, sessao }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Painel de Projeção: ${sessao.titulo || 'Sessão'}`}
+      title={`Projeção de Presença: ${sessao.titulo || 'Sessão'}`}
       size={fullScreen ? 'full' : 'lg'}
     >
-      <div className={`flex flex-col items-center justify-center p-2 sm:p-6 space-y-4 sm:space-y-6 ${
-        fullScreen ? 'min-h-[80vh]' : ''
+      <div className={`flex flex-col items-center justify-between p-1 sm:p-4 space-y-5 ${
+        fullScreen ? 'min-h-[85vh]' : ''
       }`}>
         
-        {/* Barra superior de Controles: Alternador (Check-in / Check-out) + Botão Modo Projeção */}
-        <div className="w-full max-w-md flex items-center justify-between gap-3">
-          <div className="flex-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex gap-1 shadow-inner">
-            <button
-              onClick={() => setTipoPresenca('checkin')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
-                isCheckin
-                  ? 'bg-emerald-500 text-white shadow-md'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <FiLogIn size={15} />
-              <span>Entrada (Check-in)</span>
-            </button>
-
-            <button
-              onClick={() => setTipoPresenca('checkout')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
-                !isCheckin
-                  ? 'bg-red-500 text-white shadow-md'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <FiLogOut size={15} />
-              <span>Saída (Check-out)</span>
-            </button>
-          </div>
+        {/* 1. Alternador de Modo (Check-in vs Check-out) */}
+        <div className="w-full max-w-sm bg-gray-100 dark:bg-gray-800/80 p-1.5 rounded-2xl flex gap-1.5 border border-gray-200/60 dark:border-gray-700/60 shadow-inner">
+          <button
+            onClick={() => setTipoPresenca('checkin')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 ${
+              isCheckin
+                ? 'bg-emerald-500 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            <FiLogIn size={15} />
+            <span>Check-in (Entrada)</span>
+          </button>
 
           <button
-            onClick={() => setFullScreen(!fullScreen)}
-            title={fullScreen ? 'Sair da Projeção' : 'Tela Cheia / Modo Projeção'}
-            className="flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm flex-shrink-0"
+            onClick={() => setTipoPresenca('checkout')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 ${
+              !isCheckin
+                ? 'bg-red-500 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
           >
-            {fullScreen ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />}
-            <span>{fullScreen ? 'Reduzir' : 'Modo Projeção'}</span>
+            <FiLogOut size={15} />
+            <span>Check-out (Saída)</span>
           </button>
         </div>
 
-        {/* Display QR Code */}
+        {/* 2. Container do QR Code */}
         <div 
           ref={qrRef}
-          className={`bg-white p-4 sm:p-6 rounded-2xl shadow-xl border-2 flex flex-col items-center max-w-full overflow-hidden transition-all ${
-            isCheckin ? 'border-emerald-200' : 'border-red-200'
+          className={`bg-white p-5 sm:p-7 rounded-3xl shadow-lg border transition-all flex flex-col items-center max-w-full ${
+            isCheckin 
+              ? 'border-emerald-200 dark:border-emerald-800/50 shadow-emerald-500/5' 
+              : 'border-red-200 dark:border-red-800/50 shadow-red-500/5'
           }`}
         >
-          <div className="w-full max-w-[260px] sm:max-w-[340px] flex justify-center">
+          <div className="p-2 bg-white rounded-2xl flex justify-center items-center">
             <QRCode
               value={qrPayload}
-              size={fullScreen ? 300 : 200}
+              size={fullScreen ? 340 : 210}
               style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
               level="H"
               aria-label={`QR Code de ${isCheckin ? 'Check-in' : 'Check-out'}`}
             />
           </div>
-          <p className="mt-3 text-xs text-gray-500 font-semibold text-center">
-            Projetar no início para <strong>Check-in</strong> ou no encerramento para <strong>Check-out</strong>
+          <p className="mt-3 text-xs text-gray-500 font-medium text-center max-w-[280px]">
+            Aponte a câmera do celular para registrar presença nesta sessão
           </p>
         </div>
 
-        {/* Botão Exportar QR Code */}
-        <Button
-          variant="secondary"
-          onClick={handleExportarQRCode}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 shadow-sm w-full sm:w-auto text-sm font-semibold"
-        >
-          <FiDownload className={isCheckin ? "text-emerald-600" : "text-red-600"} size={18} />
-          <span>Exportar QR Code ({isCheckin ? 'Entrada' : 'Saída'})</span>
-        </Button>
-
-        {/* Display PIN */}
-        <div className={`w-full max-w-sm rounded-xl p-3.5 sm:p-4 flex items-center justify-between shadow-sm border ${
+        {/* 3. Card do PIN da Sessão */}
+        <div className={`w-full max-w-md rounded-2xl p-4 flex items-center justify-between border transition-all ${
           isCheckin
-            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
-            : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
+            ? 'bg-emerald-50/80 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
+            : 'bg-red-50/80 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
         }`}>
           <div>
-            <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider flex items-center gap-1 ${
+            <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
               isCheckin ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'
             }`}>
-              <FiKey /> PIN de {isCheckin ? 'Check-in (Entrada)' : 'Check-out (Saída)'}
+              <FiKey size={13} /> PIN DE {isCheckin ? 'CHECK-IN' : 'CHECK-OUT'}
             </span>
-            <p className={`text-2xl sm:text-3xl font-mono font-bold tracking-widest mt-0.5 ${
+            <p className={`text-2xl sm:text-3xl font-mono font-extrabold tracking-[0.2em] mt-0.5 ${
               isCheckin ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {pinAtual}
@@ -196,10 +179,32 @@ const SessionQRCodeModal = ({ isOpen, onClose, sessao }) => {
             variant="secondary"
             size="sm"
             onClick={handleCopiarPin}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5"
+            className="flex items-center gap-1.5 text-xs font-semibold py-2 px-3.5 bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700"
           >
-            {copiado ? <FiCheck className="text-emerald-500" /> : <FiCopy />}
+            {copiado ? <FiCheck className="text-emerald-500" size={15} /> : <FiCopy size={15} />}
             <span>{copiado ? 'Copiado' : 'Copiar'}</span>
+          </Button>
+        </div>
+
+        {/* 4. Barra Inferior de Ações: Projeção à esquerda, Exportar à direita */}
+        <div className="w-full max-w-md pt-2 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between gap-3">
+          {/* Botão Modo Projeção — À Esquerda Abaixo */}
+          <button
+            onClick={() => setFullScreen(!fullScreen)}
+            className="flex items-center gap-2 text-xs font-bold py-2.5 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            {fullScreen ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />}
+            <span>{fullScreen ? 'Sair da Projeção' : 'Modo Projeção'}</span>
+          </button>
+
+          {/* Botão Exportar QR Code — À Direita */}
+          <Button
+            variant="secondary"
+            onClick={handleExportarQRCode}
+            className="flex items-center gap-2 text-xs font-bold py-2.5 px-4 shadow-sm"
+          >
+            <FiDownload className={isCheckin ? 'text-emerald-600' : 'text-red-600'} size={15} />
+            <span>Exportar PNG</span>
           </Button>
         </div>
 

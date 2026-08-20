@@ -8,7 +8,7 @@ import Badge from '../components/ui/Badge';
 import eventoService from '../services/eventoService';
 import avaliacaoService from '../services/avaliacaoService';
 import bannerEUs from '../Imagens/bannerEUs.png';
-import { FiCalendar, FiMapPin, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiUsers, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 
 const MinhasAvaliacoesPage = () => {
@@ -138,6 +138,14 @@ const MinhasAvaliacoesPage = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
+        {/* Botão Voltar */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4 transition-colors min-h-[44px]"
+        >
+          <FiArrowLeft size={16} /> Voltar
+        </button>
+
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Minhas Avaliações
@@ -166,15 +174,15 @@ const MinhasAvaliacoesPage = () => {
               return (
                 <Card
                   key={evento.id}
-                  className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+                  className="cursor-pointer hover:shadow-xl hover:-translate-y-1 hover:border-primary-400 dark:hover:border-primary-500 transition-all duration-200 overflow-hidden active:scale-[0.99] group border border-gray-200 dark:border-gray-700 rounded-2xl"
                   onClick={() => handleEventoClick(evento)}
                 >
                   {/* Banner do Evento */}
-                  <div className="relative h-40 bg-gradient-to-r from-primary-500 to-primary-600">
+                  <div className="relative h-40 bg-gradient-to-r from-primary-500 to-primary-600 overflow-hidden">
                     <img
                       src={evento.imgUrl || bannerEUs}
                       alt={evento.titulo}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         e.target.src = bannerEUs;
                       }}

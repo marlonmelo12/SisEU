@@ -1,7 +1,7 @@
 // src/services/api.js
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -14,9 +14,7 @@ const api = axios.create({
 // Interceptor de requisição - adiciona token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken') 
-                || localStorage.getItem('accessToken') 
-                || localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -60,10 +58,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token inválido ou expirado
       localStorage.removeItem('authToken');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('token');
       localStorage.removeItem('usuario');
-      window.location.href = '/';
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     }
 
     if (error.response?.status === 403) {

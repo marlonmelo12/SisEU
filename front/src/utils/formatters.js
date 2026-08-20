@@ -46,7 +46,7 @@ export const isValidCPF = (cpf) => {
   
   if (cleaned.length !== 11) return false;
   
-  // 🚨 VALIDAÇÃO DESABILITADA PARA DESENVOLVIMENTO
+  // Validacao simplificada para desenvolvimento
   // Apenas verifica se tem 11 dígitos
   return true;
   

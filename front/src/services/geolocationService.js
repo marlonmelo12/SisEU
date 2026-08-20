@@ -1,17 +1,17 @@
 // src/services/geolocationService.js
 
 /**
- * Serviço de Geolocalização
+ * Serviço de Geolocalização (Boas Práticas de UX e Validação de Raio)
  */
 const geolocationService = {
   /**
-   * Obtém a posição atual do usuário
-   * @returns {Promise<{latitude: number, longitude: number}>}
+   * Obtém a posição atual do usuário via HTML5 Geolocation API
+   * @returns {Promise<{latitude: number, longitude: number, accuracy: number}>}
    */
   async getCurrentPosition() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocalização não é suportada pelo navegador'));
+        reject(new Error('Geolocalização não é suportada pelo seu navegador.'));
         return;
       }
 
@@ -20,6 +20,7 @@ const geolocationService = {
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy || 0, // Precisão da leitura em metros
           });
         },
         (error) => {
@@ -27,39 +28,43 @@ const geolocationService = {
           
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = 'Permissão de localização negada. Por favor, habilite nas configurações do navegador.';
+              errorMessage = 'Permissão de localização negada. Por favor, ative o acesso ao GPS nas configurações do seu navegador ou dispositivo.';
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Localização indisponível no momento.';
+              errorMessage = 'Sinal de GPS indisponível no momento. Certifique-se de estar em um local com sinal de rede/GPS.';
               break;
             case error.TIMEOUT:
-              errorMessage = 'Tempo esgotado ao tentar obter localização.';
+              errorMessage = 'Tempo limite esgotado ao buscar localização. Tente novamente.';
               break;
             default:
-              errorMessage = 'Erro desconhecido ao obter localização.';
+              errorMessage = 'Erro desconhecido ao obter geolocalização.';
           }
           
           reject(new Error(errorMessage));
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
+          enableHighAccuracy: true, // Força uso de hardware GPS
+          timeout: 12000,           // 12 segundos limite
+          maximumAge: 0,            // Não reaproveita localização antiga em cache
         }
       );
     });
   },
 
   /**
-   * Calcula distância entre dois pontos usando fórmula de Haversine
-   * @param {number} lat1 
-   * @param {number} lon1 
-   * @param {number} lat2 
-   * @param {number} lon2 
-   * @returns {number} Distância em metros
+   * Calcula distância exata entre dois pontos sobre a superfície da Terra (Fórmula de Haversine)
+   * @param {number} lat1 Latitude Ponto 1
+   * @param {number} lon1 Longitude Ponto 1
+   * @param {number} lat2 Latitude Ponto 2
+   * @param {number} lon2 Longitude Ponto 2
+   * @returns {number} Distância exata em metros
    */
   calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Raio da Terra em metros
+    if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) {
+      return 0;
+    }
+
+    const R = 6371000; // Raio médio da Terra em metros
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -71,21 +76,53 @@ const geolocationService = {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // Distância em metros
+    return Math.round(R * c); // Retorna metros arredondados
   },
 
   /**
-   * Verifica se usuário está dentro do raio do evento
-   * @param {Object} eventoLocal 
-   * @param {number} eventoLocal.latitude
-   * @param {number} eventoLocal.longitude
-   * @param {number} eventoLocal.raioMetros
-   * @param {Object} usuarioLocal 
-   * @param {number} usuarioLocal.latitude
-   * @param {number} usuarioLocal.longitude
-   * @returns {boolean}
+   * Formata a distância em metros para exibição amigável ao usuário
+   * @param {number} distanciaMetros 
+   * @returns {string} ex: "45m" ou "1.2km"
    */
-  isDentroDoRaio(eventoLocal, usuarioLocal) {
+  formatarDistancia(distanciaMetros) {
+    if (distanciaMetros === null || distanciaMetros === undefined || isNaN(distanciaMetros)) {
+      return 'N/A';
+    }
+    if (distanciaMetros >= 1000) {
+      return `${(distanciaMetros / 1000).toFixed(1)} km`;
+    }
+    return `${Math.round(distanciaMetros)} m`;
+  },
+
+  /**
+   * Categoriza o nível de precisão da leitura do GPS
+   * @param {number} accuracyMetros 
+   * @returns {{ label: string, colorClass: string, isOk: boolean }}
+   */
+  getNivelPrecisao(accuracyMetros) {
+    if (!accuracyMetros || accuracyMetros <= 30) {
+      return { label: 'Alta (Excelente)', colorClass: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30', isOk: true };
+    }
+    if (accuracyMetros <= 100) {
+      return { label: 'Boa', colorClass: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30', isOk: true };
+    }
+    if (accuracyMetros <= 300) {
+      return { label: 'Moderada', colorClass: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30', isOk: true };
+    }
+    return { label: 'Fraca (Sinal Impreciso)', colorClass: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30', isOk: false };
+  },
+
+  /**
+   * Verifica se o usuário está dentro do raio máximo do evento
+   * @param {Object} eventoLocal { latitude, longitude, raioMetros }
+   * @param {Object} usuarioLocal { latitude, longitude }
+   * @returns {{ estaDentro: boolean, distancia: number }}
+   */
+  validarRaio(eventoLocal, usuarioLocal) {
+    if (!eventoLocal || !usuarioLocal) {
+      return { estaDentro: false, distancia: 0 };
+    }
+
     const distancia = this.calculateDistance(
       eventoLocal.latitude,
       eventoLocal.longitude,
@@ -93,22 +130,13 @@ const geolocationService = {
       usuarioLocal.longitude
     );
 
-    return distancia <= eventoLocal.raioMetros;
-  },
+    const raioPermitido = eventoLocal.raioMetros || 100;
 
-  /**
-   * Simula validação de geolocalização (para desenvolvimento/testes)
-   * @param {number} latitude 
-   * @param {number} longitude 
-   * @returns {Promise<boolean>}
-   */
-  async simularValidacao(latitude, longitude) {
-    // Simula um delay de rede
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Para desenvolvimento, sempre retorna true
-    // Em produção, isso seria uma chamada real à API
-    return true;
+    return {
+      estaDentro: distancia <= raioPermitido,
+      distancia,
+      raioPermitido,
+    };
   },
 };
 

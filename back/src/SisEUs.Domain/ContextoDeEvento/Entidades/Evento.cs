@@ -1,4 +1,4 @@
-﻿using SisEUs.Domain.Comum.Sementes;
+using SisEUs.Domain.Comum.Sementes;
 using SisEUs.Domain.ContextoDeEvento.Enumeracoes;
 using SisEUs.Domain.ContextoDeEvento.Excecoes;
 using SisEUs.Domain.ContextoDeEvento.ObjetosDeValor;
@@ -36,6 +36,8 @@ namespace SisEUs.Domain.ContextoDeEvento.Entidades
         
         [MaxLength(10)]
         public string? PinCheckin { get; private set; }
+        [MaxLength(10)]
+        public string? PinCheckout { get; private set; }
         public Titulo Titulo { get; private set; } = null!;
         public DateTime DataInicio { get; private set; }
         public DateTime DataFim { get; private set; }
@@ -51,6 +53,11 @@ namespace SisEUs.Domain.ContextoDeEvento.Entidades
         public void DefinirPinCheckin(string pin)
         {
             PinCheckin = pin;
+        }
+
+        public void DefinirPinCheckout(string pin)
+        {
+            PinCheckout = pin;
         }
 
         public static Evento Criar(

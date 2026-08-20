@@ -4,15 +4,15 @@ import PropTypes from 'prop-types';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
-import { FiCalendar, FiMapPin, FiClock, FiUsers, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiClock, FiUsers, FiEdit2, FiTrash2, FiMaximize2, FiKey } from 'react-icons/fi';
 import { SESSION_STATUS, SESSION_STATUS_LABELS, BADGE_VARIANTS } from '../../constants';
 import { formatDate } from '../../utils/formatters';
 import bannerEUs from '../../Imagens/bannerEUs.png';
 
 /**
- * Card de Sessão reutilizável
+ * Card de Sessão reutilizável com suporte a QR Code e PIN
  */
-const SessionCard = ({ sessao, onClick, onEdit, onDelete, isEventoPassado = false }) => {
+const SessionCard = ({ sessao, onClick, onEdit, onDelete, onShowQRCode, isEventoPassado = false }) => {
   const getStatusVariant = (status) => {
     const variants = {
       [SESSION_STATUS.ATIVA]: BADGE_VARIANTS.SUCCESS,
@@ -25,6 +25,8 @@ const SessionCard = ({ sessao, onClick, onEdit, onDelete, isEventoPassado = fals
   const getStatusLabel = (status) => {
     return SESSION_STATUS_LABELS[status] || status;
   };
+
+  const pinExibicao = sessao.pin || sessao.codigoPin || sessao.codigoUnico;
 
   return (
     <Card
@@ -43,6 +45,14 @@ const SessionCard = ({ sessao, onClick, onEdit, onDelete, isEventoPassado = fals
             {getStatusLabel(sessao.status)}
           </Badge>
         </div>
+
+        {/* PIN Badge se existir */}
+        {pinExibicao && (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 text-xs font-mono font-bold">
+            <FiKey size={12} />
+            <span>PIN: {pinExibicao}</span>
+          </div>
+        )}
 
         {/* Informações */}
         <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -75,25 +85,24 @@ const SessionCard = ({ sessao, onClick, onEdit, onDelete, isEventoPassado = fals
           )}
         </div>
 
-        {/* Organizadores */}
-        {sessao.organizadores && sessao.organizadores.length > 0 && (
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
-              Organizadores:
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {sessao.organizadores.map((org, index) => (
-                <Badge key={index} variant="default" size="sm">
-                  {org.nome}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Botões de ação */}
+        <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-2">
+          {onShowQRCode && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowQRCode(sessao);
+              }}
+              className="w-full flex items-center justify-center gap-1.5 font-semibold"
+            >
+              <FiMaximize2 size={14} />
+              QR Code
+            </Button>
+          )}
 
-        {/* Botões de ação (apenas se onEdit ou onDelete for fornecido) */}
-        {(onEdit || onDelete) && (
-          <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+          {(onEdit || onDelete) && (
             <div className="grid grid-cols-2 gap-2">
               {onEdit && (
                 <Button
@@ -128,33 +137,20 @@ const SessionCard = ({ sessao, onClick, onEdit, onDelete, isEventoPassado = fals
                 </Button>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </Card>
   );
 };
 
 SessionCard.propTypes = {
-  sessao: PropTypes.shape({
-    id: PropTypes.number,
-    titulo: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-    local: PropTypes.string.isRequired,
-    data: PropTypes.string.isRequired,
-    horarioInicio: PropTypes.string.isRequired,
-    horarioFim: PropTypes.string.isRequired,
-    imagemUrl: PropTypes.string,
-    apresentacoes: PropTypes.array,
-    organizadores: PropTypes.arrayOf(
-      PropTypes.shape({
-        nome: PropTypes.string,
-      })
-    ),
-  }).isRequired,
+  sessao: PropTypes.object.isRequired,
   onClick: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  onShowQRCode: PropTypes.func,
+  isEventoPassado: PropTypes.bool,
 };
 
 export default SessionCard;

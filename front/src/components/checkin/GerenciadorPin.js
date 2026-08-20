@@ -167,23 +167,11 @@ const GerenciadorPin = ({ eventoId }) => {
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
           Como funciona?
         </h4>
-        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>O PIN é válido por 4 horas após a geração</span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Compartilhe o PIN com os participantes do evento</span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Os participantes usarão o PIN para fazer check-in</span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Você pode gerar um novo PIN a qualquer momento</span>
-          </li>
+        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
+          <li>O PIN é válido por 4 horas após a geração</li>
+          <li>Compartilhe o PIN com os participantes do evento</li>
+          <li>Os participantes usarão o PIN para fazer check-in</li>
+          <li>Você pode gerar um novo PIN a qualquer momento</li>
         </ul>
       </div>
     </div>

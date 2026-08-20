@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,10 +32,25 @@ namespace SisEUs.Infrastructure
         {
             services.AddDbContext<AppDbContext>(options =>
             {
-                var conexao = config.GetConnectionString("DefaultConnection");
+                var conexao = config.GetConnectionString("DefaultConnection") ?? "";
 
-                options.UseMySql(conexao, ServerVersion.AutoDetect(conexao),
-                    b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                if (conexao.Contains("Data Source=", StringComparison.OrdinalIgnoreCase) || conexao.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+                {
+                    options.UseSqlite(conexao, b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                }
+                else
+                {
+                    try
+                    {
+                        options.UseMySql(conexao, ServerVersion.AutoDetect(conexao),
+                            b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                    }
+                    catch
+                    {
+                        // Fallback para SQLite caso MySQL não esteja disponível
+                        options.UseSqlite("Data Source=siseus_local.db", b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+                    }
+                }
             });
         }
 

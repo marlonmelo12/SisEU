@@ -1,5 +1,6 @@
 // src/pages/LoginPage.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -12,50 +13,55 @@ import { VALIDATION } from '../constants';
  * Página de Login (RF001)
  */
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [cpf, setCpf] = useState('');
   const [senha, setSenha] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [validationError, setValidationError] = useState('');
   const { login, loading, error } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('[LOGIN-PAGE] handleSubmit chamado');
-    console.log('[LOGIN-PAGE] CPF:', cpf, 'Senha:', senha ? '***' : 'vazia');
     setShowAlert(false);
+    setValidationError('');
 
     // Validação básica
     if (!cpf || !senha) {
-      console.log('[LOGIN-PAGE] Validação falhou: campos vazios');
+      setValidationError('Por favor, preencha todos os campos.');
       setShowAlert(true);
       return;
     }
 
     // Validação de CPF
     if (!isValidCPF(cpf)) {
-      console.log('[LOGIN-PAGE] Validação falhou: CPF inválido');
+      setValidationError('CPF inválido. Por favor, verifique o número inserido.');
       setShowAlert(true);
       return;
     }
 
     // Validação de senha mínima
     if (senha.length < VALIDATION.MIN_PASSWORD_LENGTH) {
-      console.log('[LOGIN-PAGE] Validação falhou: senha muito curta');
+      setValidationError(`A senha deve conter no mínimo ${VALIDATION.MIN_PASSWORD_LENGTH} caracteres.`);
       setShowAlert(true);
       return;
     }
 
-    // Desformatar CPF antes de enviar (remover pontos e traços)
+    // Desformatar CPF antes de enviar
     const cpfLimpo = unformatCPF(cpf);
-    console.log('[LOGIN-PAGE] CPF limpo:', cpfLimpo);
-    console.log('[LOGIN-PAGE] Chamando login...');
     
     const result = await login(cpfLimpo, senha);
     
-    console.log('[LOGIN-PAGE] Resultado do login:', result);
-    
-    if (!result.success) {
+    if (result.success) {
+      // Redireciona por tipo de usuário
+      const tipo = result.usuario?.tipoUsuario;
+      if (tipo === 'ADMINISTRADOR') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    } else {
       setShowAlert(true);
     }
   };
@@ -64,6 +70,8 @@ const LoginPage = () => {
     const formatted = formatCPF(e.target.value);
     setCpf(formatted);
   };
+
+  const currentErrorMessage = validationError || error;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 px-4">
@@ -81,19 +89,11 @@ const LoginPage = () => {
           </h2>
 
           {/* Alert de erro */}
-          {showAlert && error && (
+          {showAlert && currentErrorMessage && (
             <Alert
               type="error"
-              message={error}
+              message={currentErrorMessage}
               onClose={() => setShowAlert(false)}
-              className="mb-4"
-            />
-          )}
-
-          {!showAlert && error && (
-            <Alert
-              type="error"
-              message="Por favor, preencha todos os campos"
               className="mb-4"
             />
           )}

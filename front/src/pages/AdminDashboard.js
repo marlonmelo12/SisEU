@@ -6,13 +6,16 @@ import SessionCard from '../components/sessions/SessionCard';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 import ConfigureSessionModal from '../features/sessions/components/ConfigureSessionModal';
+import SessionQRCodeModal from '../components/sessions/SessionQRCodeModal';
 import eventoService from '../services/eventoService';
 import sessaoService from '../services/sessaoService';
 import relatorioService from '../services/relatorioService';
 import checkinService from '../services/checkinService';
 import { useSessoes } from '../hooks/useSessoes';
 import { useRelatorios } from '../hooks/useRelatorios';
-import { FiPlus, FiDownload, FiUpload, FiFileText, FiKey, FiCopy, FiCheck } from 'react-icons/fi';
+import { useToast } from '../hooks/useToast';
+import { convertPresencasToCSV, downloadCSVFile } from '../utils/csvUtils';
+import { FiPlus, FiDownload, FiUpload, FiFileText, FiKey, FiCopy, FiCheck, FiCheckCircle, FiClock } from 'react-icons/fi';
 
 /**
  * Dashboard Administrativo (RF006)
@@ -24,6 +27,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { sessoes, loading, error, listarTodas, criar, deletar } = useSessoes();
   const { exportarCSV } = useRelatorios();
+  const { showToast } = useToast();
   
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -34,6 +38,8 @@ const AdminDashboard = () => {
   const [pinGerado, setPinGerado] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [sessaoParaQrCode, setSessaoParaQrCode] = useState(null);
+  const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 
   useEffect(() => {
     listarTodas();
@@ -159,7 +165,7 @@ const AdminDashboard = () => {
       
       // Converte para CSV e faz download
       if (relatorio && relatorio.length > 0) {
-        const csvContent = convertToCSV(relatorio);
+        const csvContent = convertPresencasToCSV(relatorio);
         downloadCSVFile(csvContent, `relatorio-presencas-${new Date().toISOString().split('T')[0]}.csv`);
         
         setAlertData({ 
@@ -182,69 +188,6 @@ const AdminDashboard = () => {
     setShowAlert(true);
   };
 
-  // Função auxiliar para converter JSON em CSV
-  const convertToCSV = (data) => {
-    if (!data || data.length === 0) return '';
-
-    const headers = [
-      'ID Presença',
-      'Usuário ID',
-      'Nome Usuário',
-      'CPF',
-      'Email',
-      'Evento ID',
-      'Título Evento',
-      'Campus',
-      'Local',
-      'Data Início',
-      'Data Fim',
-      'Check-in',
-      'Check-out',
-      'Latitude Check-in',
-      'Longitude Check-in'
-    ];
-
-    const rows = data.map(item => [
-      item.id,
-      item.usuario?.id || '',
-      item.usuario?.nomeCompleto || '',
-      item.usuario?.cpf || '',
-      item.usuario?.email || '',
-      item.evento?.id || '',
-      item.evento?.titulo || '',
-      item.evento?.nomeCampus || '',
-      `${item.evento?.local?.campus || ''} - ${item.evento?.local?.bloco || ''} - ${item.evento?.local?.sala || ''}`,
-      item.evento?.dataInicio?.dataPorExtenso || '',
-      item.evento?.dataFim?.dataPorExtenso || '',
-      item.dataCheckIn || '',
-      item.dataCheckOut || '',
-      item.localizacao?.latitude || '',
-      item.localizacao?.longitude || ''
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    return csvContent;
-  };
-
-  // Função auxiliar para download do CSV
-  const downloadCSVFile = (content, filename) => {
-    const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleSessionClick = (sessaoId) => {
     navigate(`/sessao/${sessaoId}`);
   };
@@ -257,51 +200,51 @@ const AdminDashboard = () => {
           Painel Administrativo
         </h1>
 
-        {/* Botões de ação coloridos */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {/* Botões de ação coloridos e totalmente responsivos */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
           <Button
             variant="primary"
             onClick={handleAddSession}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
-            <FiPlus size={20} />
-            <span className="hidden sm:inline">Adicionar Sessão</span>
+            <FiPlus size={18} />
+            <span className="text-xs sm:text-sm font-semibold">Adicionar Sessão</span>
           </Button>
 
           <Button
             variant="success"
             onClick={handleImport}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
-            <FiUpload size={20} />
-            <span className="hidden sm:inline">Importar</span>
+            <FiUpload size={18} />
+            <span className="text-xs sm:text-sm font-semibold">Importar</span>
           </Button>
 
           <Button
             variant="warning"
             onClick={handleExport}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
-            <FiDownload size={20} />
-            <span className="hidden sm:inline">Exportar</span>
+            <FiDownload size={18} />
+            <span className="text-xs sm:text-sm font-semibold">Exportar</span>
           </Button>
 
           <Button
             variant="secondary"
             onClick={handleRelatorios}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
-            <FiFileText size={20} />
-            <span className="hidden sm:inline">Relatórios</span>
+            <FiFileText size={18} />
+            <span className="text-xs sm:text-sm font-semibold">Relatórios</span>
           </Button>
 
           <Button
             variant="info"
             onClick={handleGerarPin}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white col-span-2 sm:col-span-1"
           >
-            <FiKey size={20} />
-            <span className="hidden sm:inline">Gerar Novo PIN</span>
+            <FiKey size={18} />
+            <span className="text-xs sm:text-sm font-semibold">Gerar PIN</span>
           </Button>
         </div>
       </div>
@@ -345,7 +288,7 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-              <span className="text-green-500 text-2xl">●</span>
+              <FiCheckCircle className="text-green-500 text-xl" />
             </div>
           </div>
         </div>
@@ -359,7 +302,7 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
-              <span className="text-yellow-500 text-2xl">⏱</span>
+              <FiClock className="text-yellow-500 text-xl" />
             </div>
           </div>
         </div>
@@ -405,6 +348,10 @@ const AdminDashboard = () => {
                   onClick={() => handleSessionClick(sessao.id)}
                   onDelete={() => handleDeleteSession(sessao)}
                   onEdit={() => handleEditSession(sessao)}
+                  onShowQRCode={(s) => {
+                    setSessaoParaQrCode(s);
+                    setShowQrCodeModal(true);
+                  }}
                   isEventoPassado={eventoPassado}
                 />
               );
@@ -414,11 +361,20 @@ const AdminDashboard = () => {
       )}
 
       {/* Modal de Configuração de Sessão */}
-      {/* Modal de Configuração de Sessão */}
       <ConfigureSessionModal
         isOpen={showModal}
         onClose={handleCloseModal}
         eventoParaEditar={eventoParaEditar}
+      />
+
+      {/* Modal de QR Code da Sessão */}
+      <SessionQRCodeModal
+        isOpen={showQrCodeModal}
+        onClose={() => {
+          setShowQrCodeModal(false);
+          setSessaoParaQrCode(null);
+        }}
+        sessao={sessaoParaQrCode}
       />
 
       {/* Modal de Confirmação de Exclusão */}

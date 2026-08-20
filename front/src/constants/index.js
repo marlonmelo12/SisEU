@@ -56,17 +56,15 @@ export const CAMPUS_LABELS = {
 // TIPOS DE EVENTO (Enum do Backend)
 // ============================================
 export const TIPO_EVENTO = {
-  SEMINARIO: 0,
-  WORKSHOP: 1,
-  CONFERENCIA: 2,
-  PALESTRA: 3,
+  APRESENTACAO_ORAL: 0,
+  PITCH: 1,
+  BANNER: 2,
 };
 
 export const TIPO_EVENTO_LABELS = {
-  [TIPO_EVENTO.SEMINARIO]: 'Seminário',
-  [TIPO_EVENTO.WORKSHOP]: 'Workshop',
-  [TIPO_EVENTO.CONFERENCIA]: 'Conferência',
-  [TIPO_EVENTO.PALESTRA]: 'Palestra',
+  [TIPO_EVENTO.APRESENTACAO_ORAL]: 'Apresentação Oral',
+  [TIPO_EVENTO.PITCH]: 'Pitch',
+  [TIPO_EVENTO.BANNER]: 'Banner',
 };
 
 // ============================================

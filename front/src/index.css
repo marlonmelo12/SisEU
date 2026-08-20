@@ -2,28 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&display=swap");
 
 @layer base {
   * {
-    @apply m-0 p-0 outline-none;
+    @apply m-0 p-0;
     font-family: 'Inter', sans-serif;
+    /* Elimina delay de 300ms em taps no mobile */
+    touch-action: manipulation;
+    /* Remove outline padrão — substituído por focus-visible */
+    outline: none;
+  }
+
+  /* Focus visível apenas com teclado (acessibilidade) */
+  *:focus-visible {
+    @apply ring-2 ring-primary-500 ring-offset-2;
   }
 
   body {
-    @apply transition-colors duration-300 h-screen box-border;
+    @apply transition-colors duration-300 box-border;
+    /* Evita scroll horizontal acidental no mobile */
+    overflow-x: hidden;
+    /* Evita o "bounce" de scroll fora do conteúdo no iOS */
+    overscroll-behavior-y: contain;
   }
-  
+
   body.light {
     @apply bg-gray-50 text-gray-900;
   }
-  
+
   body.dark {
     @apply bg-[#060010] text-white;
+  }
+
+  /* Garante que inputs não causem zoom automático no iOS (exige font-size >= 16px) */
+  input, select, textarea {
+    font-size: 16px;
   }
 }
 
 @layer components {
+  /* Padding seguro para bottom nav em iPhones com home bar */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Bottom nav — área de toque segura */
+  .bottom-nav-safe {
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Espaço reservado para o bottom nav no conteúdo principal */
+  .main-content-mobile {
+    @apply pb-20 md:pb-0;
+  }
+
   .modal-overlay.show {
     @apply fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[999];
   }
@@ -34,5 +72,15 @@
 
   .x-icon {
     @apply absolute top-2.5 right-2.5 cursor-pointer z-[2] bg-white rounded-full;
+  }
+
+  /* Scrollbar discreto */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }

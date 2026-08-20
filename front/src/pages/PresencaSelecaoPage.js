@@ -2,94 +2,74 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
-import Button from '../components/ui/Button';
-import { FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiLogIn, FiLogOut, FiArrowRight } from 'react-icons/fi';
 
 /**
- * Página de seleção entre Check-in e Check-out
+ * Seleção entre Check-in e Check-out — Mobile-first
+ * Cards de toque grande, layout em coluna no mobile
  */
 const PresencaSelecaoPage = () => {
   const navigate = useNavigate();
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="max-w-lg mx-auto">
+        {/* Cabeçalho */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Registro de Presença
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Selecione o tipo de registro que deseja realizar
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            Selecione o tipo de registro
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card Check-in */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-green-100 dark:bg-green-900 rounded-full p-6 mb-4">
-                <FiLogIn className="text-green-600 dark:text-green-400" size={48} />
+        {/* Cards de ação */}
+        <div className="flex flex-col gap-3">
+          {/* Check-in */}
+          <button
+            onClick={() => navigate('/presenca/checkin/metodo')}
+            className="w-full text-left bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-150 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors">
+                <FiLogIn className="text-emerald-600 dark:text-emerald-400" size={26} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Check-in
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Registre sua entrada no evento
-              </p>
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => navigate('/presenca/checkin/metodo')}
-                className="w-full"
-              >
-                Fazer Check-in
-              </Button>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 dark:text-white text-base">Check-in</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5 leading-snug">
+                  Registre sua entrada no evento
+                </p>
+              </div>
+              <FiArrowRight className="text-gray-400 group-hover:text-emerald-500 transition-colors flex-shrink-0" size={20} />
             </div>
-          </div>
+          </button>
 
-          {/* Card Check-out */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-red-100 dark:bg-red-900 rounded-full p-6 mb-4">
-                <FiLogOut className="text-red-600 dark:text-red-400" size={48} />
+          {/* Check-out */}
+          <button
+            onClick={() => navigate('/presenca/checkout/metodo')}
+            className="w-full text-left bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-150 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 dark:group-hover:bg-red-900/60 transition-colors">
+                <FiLogOut className="text-red-600 dark:text-red-400" size={26} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Check-out
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Registre sua saída do evento
-              </p>
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => navigate('/presenca/checkout/metodo')}
-                className="w-full"
-              >
-                Fazer Check-out
-              </Button>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 dark:text-white text-base">Check-out</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5 leading-snug">
+                  Registre sua saída do evento
+                </p>
+              </div>
+              <FiArrowRight className="text-gray-400 group-hover:text-red-500 transition-colors flex-shrink-0" size={20} />
             </div>
-          </div>
+          </button>
         </div>
 
-        {/* Informações adicionais */}
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
-            Importante
-          </h3>
-          <ul className="space-y-2 text-blue-800 dark:text-blue-200">
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Você precisará validar sua presença com PIN ou QR Code</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>A geolocalização deve estar ativada para confirmar sua presença</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Você deve estar dentro da área do evento para concluir o registro</span>
-            </li>
-          </ul>
+        {/* Informação compacta */}
+        <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800">
+          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+            <strong>Importante:</strong> Você precisará de PIN ou QR Code e ter o GPS ativado para confirmar sua presença dentro da área do evento.
+          </p>
         </div>
       </div>
     </Layout>

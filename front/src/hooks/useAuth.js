@@ -1,108 +1,68 @@
 // src/hooks/useAuth.js
-import { useState, useEffect, useCallback } from 'react';
-import authService from '../services/authService';
+import { useContext, useCallback } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 /**
- * Hook de autenticação (Controller)
+ * Hook de autenticação que consome o AuthContext global
  */
 export const useAuth = () => {
-  const [usuario, setUsuario] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const context = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Carrega usuário do localStorage ao montar
-  useEffect(() => {
-    const usuarioLogado = authService.getUsuarioLogado();
-    setUsuario(usuarioLogado);
-    setLoading(false);
-  }, []);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+
+  const {
+    usuario,
+    loading,
+    error,
+    login: contextLogin,
+    logout: contextLogout,
+    isAuthenticated,
+    isAdmin,
+    isAvaliador,
+    isEstudante,
+    isReady,
+    userProfile,
+  } = context;
 
   /**
-   * Realiza login
+   * Realiza login e redireciona baseado no tipo de usuário
    */
-  const login = useCallback(async (cpf, senha) => {
-    setLoading(true);
-    setError(null);
-    
-    console.log('[HOOK] Iniciando login com CPF:', cpf);
-    
-    try {
-      const responseData = await authService.login(cpf, senha);
-      console.log('[HOOK] Resposta completa do authService:', responseData);
-      
-      const { usuario: usuarioData } = responseData;
-      console.log('[HOOK] Dados do usuário:', usuarioData);
-      
-      setUsuario(usuarioData);
+  const login = useCallback(
+    async (cpf, senha) => {
+      const result = await contextLogin(cpf, senha);
 
-      // Redireciona baseado no tipo de usuário
-      switch (usuarioData?.tipoUsuario) {
-        case 'ADMINISTRADOR':
-          navigate('/admin');
-          break;
-        case 'PROFESSOR':
-        case 'AVALIADOR':
-          navigate('/avaliacoes');
-          break;
-        case 'ESTUDANTE':
-          navigate('/dashboard');
-          break;
-        default:
-          navigate('/dashboard');
+      if (result.success && result.usuario) {
+        switch (result.usuario.tipoUsuario) {
+          case 'ADMINISTRADOR':
+            navigate('/admin');
+            break;
+          case 'PROFESSOR':
+          case 'AVALIADOR':
+            navigate('/avaliacoes');
+            break;
+          case 'ESTUDANTE':
+          default:
+            navigate('/dashboard');
+            break;
+        }
       }
 
-      return { success: true };
-    } catch (err) {
-      console.error('[HOOK] Erro no login:', err);
-      setError(err.message);
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate]);
+      return result;
+    },
+    [contextLogin, navigate]
+  );
 
   /**
-   * Realiza logout
+   * Realiza logout e redireciona para a página inicial
    */
   const logout = useCallback(() => {
-    authService.logout();
-    setUsuario(null);
+    contextLogout();
     navigate('/');
-  }, [navigate]);
-
-  /**
-   * Verifica se está autenticado
-   */
-  const isAuthenticated = useCallback(() => {
-    return authService.isAuthenticated();
-  }, []);
-
-  /**
-   * Verifica se é admin
-   */
-  const isAdmin = useCallback(() => {
-    return authService.isAdmin();
-  }, []);
-
-  /**
-   * Verifica se é avaliador
-   */
-  const isAvaliador = useCallback(() => {
-    return authService.isAvaliador();
-  }, []);
-
-  /**
-   * Verifica se é estudante
-   */
-  const isEstudante = useCallback(() => {
-    return authService.isEstudante();
-  }, []);
-
-  // Mantém compatibilidade com código antigo
-  const isReady = !loading;
-  const userProfile = usuario?.tipoUsuario || null;
+  }, [contextLogout, navigate]);
 
   return {
     usuario,
@@ -110,11 +70,10 @@ export const useAuth = () => {
     error,
     login,
     logout,
-    isAuthenticated: isAuthenticated(),
+    isAuthenticated,
     isAdmin,
     isAvaliador,
     isEstudante,
-    // Compatibilidade
     isReady,
     userProfile,
   };

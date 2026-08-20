@@ -214,7 +214,7 @@ const MinhasAvaliacoesPage = () => {
                       <div className="flex gap-2">
                         {status.concluidas > 0 && (
                           <Badge variant="success" size="sm">
-                            {status.concluidas} ✓
+                            {status.concluidas} concluída{status.concluidas > 1 ? 's' : ''}
                           </Badge>
                         )}
                         {status.pendentes > 0 && (

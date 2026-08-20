@@ -17,9 +17,17 @@ const sessaoService = {
     const dataInicioValida = dataInicio && !isNaN(dataInicio.getTime());
     const dataFimValida = dataFim && !isNaN(dataFim.getTime());
 
-    // Transforma avaliadores (pode vir como array de objetos ou strings/CPFs)
+    // Transforma avaliadores preservando nome e cpf separadamente
     const avaliadores = Array.isArray(evento.avaliadores) 
-      ? evento.avaliadores.map(av => typeof av === 'string' ? av : av.nomeCompleto || av.nome || av.cpf)
+      ? evento.avaliadores.map(av => {
+          if (typeof av === 'string') {
+            return /[a-zA-Z]/.test(av) ? { nome: av, cpf: '123.456.789-00' } : { nome: 'Avaliador', cpf: av };
+          }
+          return {
+            nome: av?.nomeCompleto || av?.nome || 'Avaliador',
+            cpf: av?.cpf || '123.456.789-00'
+          };
+        })
       : [];
 
     // Transforma apresentações para extrair nomes de autor e orientador
@@ -190,7 +198,14 @@ const sessaoService = {
       console.log('[SESSAO-SERVICE] Evento recebido:', response.data);
       return sessaoService.transformarEvento(response.data);
     } catch (error) {
-      console.error('[SESSAO-SERVICE] Erro ao buscar evento:', error);
+      console.warn('[SESSAO-SERVICE] Falha ao buscar direto por /Eventos/' + id + ', tentando fallback na lista completa...');
+      try {
+        const todos = await sessaoService.listarTodas();
+        const encontrado = todos.find(e => String(e.id) === String(id));
+        if (encontrado) return encontrado;
+      } catch (fallbackErr) {
+        console.error('[SESSAO-SERVICE] Erro no fallback:', fallbackErr);
+      }
       const errorMessage = error.response?.data?.message || 'Evento não encontrado';
       throw new Error(errorMessage);
     }

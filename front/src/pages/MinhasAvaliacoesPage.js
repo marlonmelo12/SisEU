@@ -8,7 +8,7 @@ import Badge from '../components/ui/Badge';
 import eventoService from '../services/eventoService';
 import avaliacaoService from '../services/avaliacaoService';
 import bannerEUs from '../Imagens/bannerEUs.png';
-import { FiCalendar, FiMapPin, FiUsers, FiArrowLeft } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiUsers, FiClock, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 
 const MinhasAvaliacoesPage = () => {
@@ -167,59 +167,62 @@ const MinhasAvaliacoesPage = () => {
             description="Você não possui eventos onde é avaliador no momento."
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
             {eventos.map((evento) => {
               const status = getStatusAvaliacoes(evento);
               
               return (
                 <Card
                   key={evento.id}
-                  className="cursor-pointer hover:shadow-xl hover:-translate-y-1 hover:border-primary-400 dark:hover:border-primary-500 transition-all duration-200 overflow-hidden active:scale-[0.99] group border border-gray-200 dark:border-gray-700 rounded-2xl"
+                  image={evento.imgUrl || bannerEUs}
+                  hoverable
                   onClick={() => handleEventoClick(evento)}
+                  className="h-full"
                 >
-                  {/* Banner do Evento */}
-                  <div className="relative h-40 bg-gradient-to-r from-primary-500 to-primary-600 overflow-hidden">
-                    <img
-                      src={evento.imgUrl || bannerEUs}
-                      alt={evento.titulo}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.src = bannerEUs;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-bold text-lg line-clamp-2">
+                  <div className="space-y-3">
+                    {/* Título e Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white flex-1 line-clamp-2">
                         {evento.titulo}
                       </h3>
-                    </div>
-                  </div>
-
-                  {/* Informações do Evento */}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      <FiCalendar size={16} />
-                      <span>{evento.dataInicio?.dataPorExtenso || 'Data não informada'}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      <FiMapPin size={16} />
-                      <span className="line-clamp-1">{formatLocal(evento.local)}</span>
+                      <Badge variant={status.concluidas === status.total && status.total > 0 ? "success" : status.pendentes > 0 ? "warning" : "default"}>
+                        {status.concluidas === status.total && status.total > 0 ? "Concluído" : status.pendentes > 0 ? "Pendente" : "Sem apresentações"}
+                      </Badge>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      <FiUsers size={16} />
-                      <span>
-                        {status.total} {status.total === 1 ? 'apresentação' : 'apresentações'}
-                      </span>
+                    {/* Informações */}
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <FiMapPin size={16} className="flex-shrink-0 text-primary-500" />
+                        <span className="line-clamp-1">
+                          {formatLocal(evento.local)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <FiCalendar size={16} className="flex-shrink-0 text-primary-500" />
+                        <span>{evento.dataInicio?.dataPorExtenso || evento.data || 'Data não informada'}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <FiClock size={16} className="flex-shrink-0 text-primary-500" />
+                        <span>
+                          {evento.horarioInicio || '14:00'} - {evento.horarioFim || '18:00'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <FiUsers size={16} className="flex-shrink-0 text-primary-500" />
+                        <span>{status.total} {status.total === 1 ? 'apresentação' : 'apresentações'}</span>
+                      </div>
                     </div>
 
                     {/* Status das Avaliações */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Status das avaliações
+                    <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        Avaliações da banca
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         {status.concluidas > 0 && (
                           <Badge variant="success" size="sm">
                             {status.concluidas} concluída{status.concluidas > 1 ? 's' : ''}
@@ -227,7 +230,7 @@ const MinhasAvaliacoesPage = () => {
                         )}
                         {status.pendentes > 0 && (
                           <Badge variant="warning" size="sm">
-                            {status.pendentes} Pendente{status.pendentes > 1 ? 's' : ''}
+                            {status.pendentes} pendente{status.pendentes > 1 ? 's' : ''}
                           </Badge>
                         )}
                         {status.total === 0 && (
